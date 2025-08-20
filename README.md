@@ -1,9 +1,8 @@
-# dobi
-
+![logo](logo.png)
 
 
 ### Goals
 
 - Dobi handles tedious tasks for graduate students.
-- User data is not stored on the server.
-- We guarantee 100% accurate results with no hallucinations.
+- Dobi does not store user data on the server.
+- Dobi guarantees 100% accurate results with no hallucinations.

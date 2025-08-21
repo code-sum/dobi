@@ -5,4 +5,4 @@
 
 - Dobi handles tedious tasks for graduate students.
 - Dobi does not store user data on the server.
-- Dobi guarantees 100% accurate results with no hallucinations.
+- Dobi guarantees 100% accurate results without hallucinations.

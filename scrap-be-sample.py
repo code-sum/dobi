@@ -122,23 +122,6 @@ class TextCrawler:
                 print(f"발견된 검색어: {', '.join(result['found_terms'])}")
             else:
                 print("발견된 검색어: 없음")
-    
-    def save_results_to_file(self, filename="crawling_results.txt"):
-        """결과를 파일로 저장"""
-        with open(filename, 'w', encoding='utf-8') as f:
-            f.write("웹 크롤링 결과\n")
-            f.write("="*50 + "\n\n")
-            f.write(f"검색어: {', '.join(self.search_terms)}\n")
-            f.write(f"크롤링 일시: {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n")
-            
-            for i, result in enumerate(self.results, 1):
-                f.write(f"[{i}] {result['url']}\n")
-                f.write(f"제목: {result['page_title']}\n")
-                f.write(f"발견된 검색어: {', '.join(result['found_terms']) if result['found_terms'] else '없음'}\n")
-                f.write(f"미리보기: {result['preview_text']}\n")
-                f.write("-" * 50 + "\n")
-        
-        print(f"💾 결과가 '{filename}' 파일로 저장되었습니다.")
 
 
 def main():

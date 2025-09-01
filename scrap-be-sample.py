@@ -96,9 +96,9 @@ class TextCrawler:
         total_sites = len(self.results)
         sites_with_terms = len([r for r in self.results if r['found_count'] > 0])
         
-        print(f"총 크롤링된 사이트: {total_sites}개")
-        print(f"검색어가 발견된 사이트: {sites_with_terms}개")
-        print(f"성공률: {sites_with_terms/total_sites*100:.1f}%\n" if total_sites > 0 else "")
+        print(f"총 크롤링된 사이트(A): {total_sites}개")
+        print(f"검색어가 발견된 사이트(B): {sites_with_terms}개")
+        print(f"탐색 성공률(B/A*100): {sites_with_terms/total_sites*100:.1f}%\n" if total_sites > 0 else "")
         
         # 검색어별 통계
         term_stats = {term: 0 for term in self.search_terms}
@@ -133,7 +133,7 @@ def main():
     
     # 크롤러 인스턴스 생성
     crawler = TextCrawler(
-        search_terms=['apple', 'banana'],  # 검색할 단어들
+        search_terms=['sugyeong', 'banana'],  # 검색할 단어들
         delay=1  # 요청 간 지연시간 (초)
     )
     

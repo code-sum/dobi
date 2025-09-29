@@ -1,6 +1,18 @@
-import React from 'react';
+"use client";
+
+import React, { useState } from 'react';
 
 export default function Scrap() {
+  const [showInput, setShowInput] = useState(false);
+
+  const handleAddInput = () => {
+    setShowInput(true);
+  };
+
+  const handleRemoveInput = () => {
+    setShowInput(false);
+  };
+
   return (
     <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
       <div className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
@@ -9,11 +21,22 @@ export default function Scrap() {
             <h1>1단계:</h1>
             <h1>크롤링 하고 싶은 사이트 주소를 입력해주세요</h1>
           </div>
-          <div>
-            <button>+</button>
-            <button>-</button>
+          
+          {showInput && (
+            <div className="mt-2">
+              <input
+                type="url"
+                placeholder="https://example.com"
+                className="w-full p-2 border rounded-md"
+              />
+            </div>
+          )}
+
+          <div className="mt-2">
+            <button onClick={handleAddInput} className="mr-2 px-3 py-1 border rounded-md">+</button>
+            <button onClick={handleRemoveInput} className="px-3 py-1 border rounded-md">-</button>
           </div>
-          <div>
+          <div className="mt-4">
             <button>다음</button>
           </div>
         </div>

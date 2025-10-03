@@ -3,14 +3,17 @@
 import React, { useState } from 'react';
 
 export default function Scrap() {
-  const [showInput, setShowInput] = useState(false);
+  const [inputs, setInputs] = useState([{ id: 1 }]);
 
   const handleAddInput = () => {
-    setShowInput(true);
+    const newId = inputs.length > 0 ? inputs[inputs.length - 1].id + 1 : 1;
+    setInputs([...inputs, { id: newId }]);
   };
 
   const handleRemoveInput = () => {
-    setShowInput(false);
+    if (inputs.length > 1) {
+      setInputs(inputs.slice(0, -1));
+    }
   };
 
   return (
@@ -22,15 +25,15 @@ export default function Scrap() {
             <h1>크롤링 하고 싶은 사이트 주소를 입력해주세요</h1>
           </div>
           
-          {showInput && (
-            <div className="mt-2">
+          {inputs.map(input => (
+            <div key={input.id} className="mt-2">
               <input
                 type="url"
                 placeholder="https://example.com"
                 className="w-full p-2 border rounded-md"
               />
             </div>
-          )}
+          ))}
 
           <div className="mt-2">
             <button onClick={handleAddInput} className="mr-2 px-3 py-1 border rounded-md">+</button>

@@ -135,14 +135,13 @@ export default function Scrap() {
           </div>
         )}
 
-        {/* --- 3단계: 결과 확인 --- */}
         {currentStep === 3 && (
-          <div className="scrap-result-box">
+          <div className="scrap-result-box text-white">
             <h1>크롤링 결과</h1>
             {isLoading ? (
               <p>크롤링 중입니다... 잠시만 기다려주세요.</p>
             ) : (
-              <pre className="whitespace-pre-wrap bg-gray-100 p-4 rounded-md mt-4">{results}</pre>
+              <pre className="blackspace-pre-wrap bg-slate-100 text-slate-800 p-4 rounded-md mt-4 border border-slate-200">{results}</pre>
             )}
             <div className="mt-4">
                 <button onClick={handleReset}>처음으로</button>

@@ -6,26 +6,26 @@
 - Dobi does not store user data on the server.
 - Dobi guarantees 100% accurate results without hallucinations.
 
-- Frontend
+### Frontend
 
 ```bash
 cd dobi-app
 ```
 
 ```bash
-cd pnpm run dev
+pnpm run dev
 ```
 
-- Backend
+### Backend
 
 ```bash
 cd dobi-api
 ```
 
 ```bash
-cd source venv/Scripts/activate
+source venv/Scripts/activate
 ```
 
 ```bash
-cd uvicorn main:app --reload
+uvicorn main:app --reload
 ```

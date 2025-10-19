@@ -11,7 +11,6 @@ from pydantic import BaseModel, Field
 # --- 1. FastAPI 앱 인스턴스 생성 및 CORS 설정 ---
 app = FastAPI()
 
-# CORS 설정: 프론트엔드(Next.js)가 3000번 포트에서 실행되므로 해당 오리진을 허용
 origins = [
     "http://localhost:3000",
 ]
@@ -25,10 +24,11 @@ app.add_middleware(
 )
 
 # --- 2. Pydantic을 사용한 데이터 모델 정의 ---
-# 프론트엔드에서 API로 보낼 요청 본문(body)의 형식을 정의
+
+# [수정됨] 프론트엔드의 keywords (단일 문자열) 상태에 맞춤
 class CrawlRequest(BaseModel):
     urls: List[str] = Field(..., example=['https://www.wikipedia.org/wiki/Apple'])
-    search_terms: List[str] = Field(..., example=['apple', 'banana'])
+    keywords: str = Field(..., example='apple, banana') # search_terms: List[str] 대신 keywords: str
 
 # API가 프론트엔드로 반환할 응답 데이터의 형식을 정의
 class CrawlResult(BaseModel):
@@ -38,8 +38,7 @@ class CrawlResult(BaseModel):
     page_title: str
     preview_text: str
 
-# --- 3. 기존 크롤러 클래스 (API와 연동되도록 일부 수정) ---
-# print() 대신 데이터를 리스트에 담아 반환하도록 변경
+# --- 3. 기존 크롤러 클래스 (변경 없음) ---
 class TextCrawler:
     def __init__(self, search_terms=['apple', 'banana'], delay=1):
         self.search_terms = search_terms
@@ -104,10 +103,14 @@ class TextCrawler:
 @app.post("/api/crawl", response_model=List[CrawlResult])
 async def run_crawl(request: CrawlRequest):
     """
-    프론트엔드로부터 URL 리스트와 검색어 리스트를 받아 크롤링을 수행하고 결과를 반환
+    프론트엔드로부터 URL 리스트와 '키워드 문자열'을 받아 크롤링을 수행하고 결과를 반환
     """
+    
+    # [수정됨] 쉼표로 구분된 keywords 문자열을 리스트로 변환
+    search_terms_list = [term.strip() for term in request.keywords.split(',') if term.strip()]
+    
     # 요청 받은 데이터로 크롤러 인스턴스 생성
-    crawler = TextCrawler(search_terms=request.search_terms, delay=1)
+    crawler = TextCrawler(search_terms=search_terms_list, delay=1)
     
     # 크롤링 실행 및 결과 반환
     crawl_results = crawler.crawl_sites(request.urls)

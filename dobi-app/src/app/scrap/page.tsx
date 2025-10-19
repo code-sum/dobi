@@ -2,21 +2,28 @@
 
 import React, { useState } from 'react';
 
+// --- 백엔드의 CrawlResult 모델과 일치하는 타입 정의 ---
+interface CrawlResult {
+  url: string;
+  found_terms: string[];
+  found_count: number;
+  page_title: string;
+  preview_text: string;
+}
+
 export default function Scrap() {
-  // 1. input의 id와 실제 입력값(value)을 함께 저장
   const [inputs, setInputs] = useState([{ id: 1, value: '' }]);
   const [currentStep, setCurrentStep] = useState(1);
   const [keywords, setKeywords] = useState('');
 
-  // --- 결과 관리를 위한 상태 추가 ---
-  const [isLoading, setIsLoading] = useState(false); // 로딩 상태
-  const [results, setResults] = useState('');       // 결과 메시지
+  // --- 결과 관리를 위한 상태 수정 ---
+  const [isLoading, setIsLoading] = useState(false);
+  const [results, setResults] = useState<CrawlResult[]>([]); // [수정됨] 문자열 대신 객체 배열로
+  const [error, setError] = useState<string | null>(null);   // [추가됨] 에러 메시지 상태
 
-  // URL input의 내용이 변경될 때마다 호출되는 함수
-  const handleUrlChange = (id, event) => {
+  const handleUrlChange = (id: number, event: React.ChangeEvent<HTMLInputElement>) => {
     const newInputs = inputs.map(input => {
       if (input.id === id) {
-        // id가 일치하는 항목의 value를 업데이트
         return { ...input, value: event.target.value };
       }
       return input;
@@ -26,7 +33,6 @@ export default function Scrap() {
 
   const handleAddInput = () => {
     const newId = inputs.length > 0 ? Math.max(...inputs.map(i => i.id)) + 1 : 1;
-    // 새 input 객체에도 value: ''를 추가
     setInputs([...inputs, { id: newId, value: '' }]);
   };
 
@@ -37,7 +43,6 @@ export default function Scrap() {
   };
   
   const handleNext = () => {
-    // URL이 하나라도 입력되었는지 확인
     const hasValue = inputs.some(input => input.value.trim() !== '');
     if (!hasValue) {
       alert('URL을 하나 이상 입력해주세요.');
@@ -46,60 +51,77 @@ export default function Scrap() {
     setCurrentStep(2);
   };
 
-  // 2. 크롤링 시작 함수 구현
-  const handleStartCrawling = () => {
+  // [수정됨] 2. 크롤링 시작 함수 (API 연동)
+  const handleStartCrawling = async () => {
     if (keywords.trim() === '') {
       alert('키워드를 입력해주세요.');
       return;
     }
 
-    // 실제 크롤링 로직은 보통 백엔드 서버에서 수행
-    console.log("크롤링 시작!");
     const urlsToCrawl = inputs.map(input => input.value).filter(url => url.trim() !== '');
-    console.log("대상 URL:", urlsToCrawl);
-    console.log("검색 키워드:", keywords);
 
     setIsLoading(true);
-    setResults('');
+    setResults([]);
+    setError(null);
     setCurrentStep(3); // 결과 화면(3단계)으로 이동
 
-    // 2초 후 크롤링이 완료된 것처럼 시뮬레이션
-    setTimeout(() => {
+    try {
+      const response = await fetch("http://localhost:8000/api/crawl", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          urls: urlsToCrawl,
+          keywords: keywords, // 백엔드에서 받을 단일 키워드 문자열
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `API Error: ${response.status}`);
+      }
+
+      const data: CrawlResult[] = await response.json();
+      setResults(data);
+
+    } catch (err: any) {
+      setError(err.message || '크롤링 중 알 수 없는 오류가 발생했습니다.');
+    } finally {
       setIsLoading(false);
-      const resultMessage = `✅ 크롤링 완료!\n\n- 대상 URL: ${urlsToCrawl.join(', ')}\n- 검색 키워드: "${keywords}"\n\n(실제 결과 데이터는 백엔드 API를 통해 받아와야 합니다.)`;
-      setResults(resultMessage);
-    }, 2000);
+    }
   };
   
-  // 처음으로 돌아가는 리셋 함수
+  // [수정됨] 처음으로 돌아가는 리셋 함수
   const handleReset = () => {
     setInputs([{ id: 1, value: '' }]);
     setCurrentStep(1);
     setKeywords('');
     setIsLoading(false);
-    setResults('');
+    setResults([]);
+    setError(null);
   };
 
   return (
     <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <div className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
+      <div className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start w-full max-w-md">
         
         {/* --- 1단계: URL 입력 --- */}
         {currentStep === 1 && (
-          <div className="scrap-first-box">
+          <div className="w-full">
             <div>
-              <h1>1단계:</h1>
+              <h1 className="text-xl font-bold">1단계:</h1>
               <h1>크롤링 하고 싶은 사이트 주소를 입력해주세요</h1>
             </div>
-            <div>
+            <div className="mt-4">
               {inputs.map(input => (
                 <div key={input.id} className="mt-2">
                   <input
                     type="url"
                     placeholder="https://example.com"
                     className="w-full p-2 border rounded-md"
-                    value={input.value} // 상태의 value와 input의 value를 연결
-                    onChange={(e) => handleUrlChange(input.id, e)} // 변경될 때마다 handleUrlChange 호출
+                    value={input.value}
+                    onChange={(e) => handleUrlChange(input.id, e)}
                   />
                 </div>
               ))}
@@ -109,42 +131,66 @@ export default function Scrap() {
               <button onClick={handleRemoveInput} className="px-3 py-1 border rounded-md">-</button>
             </div>
             <div className="mt-4">
-              <button onClick={handleNext}>다음</button>
+              <button onClick={handleNext} className="w-full p-2 bg-blue-500 text-white rounded-md">다음</button>
             </div>
           </div>
         )}
 
         {/* --- 2단계: 키워드 입력 --- */}
         {currentStep === 2 && (
-          <div className="scrap-second-box">
+          <div className="w-full">
             <div>
-              <h1>2단계:</h1>
+              <h1 className="text-xl font-bold">2단계:</h1>
               <h1>입력하신 사이트에서 어떤 단어들을 찾고 싶은가요?</h1>
             </div>
-            <div>
+            <div className="mt-4">
               <textarea 
-                className="w-full p-2 border rounded-md"
+                className="w-full p-2 border rounded-md h-32"
                 value={keywords}
                 onChange={(e) => setKeywords(e.target.value)}
                 placeholder="찾고 싶은 단어를 쉼표(,)로 구분하여 입력하세요."
               />
             </div>
-            <div>
-              <button onClick={handleStartCrawling}>크롤링 시작</button>
+            <div className="mt-4">
+              <button onClick={handleStartCrawling} className="w-full p-2 bg-green-500 text-white rounded-md">크롤링 시작</button>
             </div>
           </div>
         )}
 
+        {/* --- [수정됨] 3단계: 결과 화면 --- */}
         {currentStep === 3 && (
-          <div className="scrap-result-box text-white">
-            <h1>크롤링 결과</h1>
+          <div className="w-full">
+            <h1 className="text-xl font-bold">크롤링 결과</h1>
             {isLoading ? (
               <p>크롤링 중입니다... 잠시만 기다려주세요.</p>
+            ) : error ? (
+              <div className="mt-4 p-4 bg-red-100 text-red-700 border border-red-300 rounded-md">
+                <strong>오류 발생:</strong> {error}
+              </div>
+            ) : results.length > 0 ? (
+              <div className="mt-4 space-y-4">
+                {results.map((result, index) => (
+                  <div key={index} className="p-4 border rounded-md shadow-sm bg-slate-100 text-slate-800">
+                    <h2 className="text-lg font-semibold truncate" title={result.page_title}>
+                      {result.page_title}
+                    </h2>
+                    <a href={result.url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 break-all">
+                      {result.url}
+                    </a>
+                    <p className="mt-2 text-sm">
+                      <strong>발견된 키워드 ({result.found_count}개):</strong> {result.found_terms.join(', ') || '없음'}
+                    </p>
+                    <p className="mt-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                      <strong>미리보기:</strong> {result.preview_text}
+                    </p>
+                  </div>
+                ))}
+              </div>
             ) : (
-              <pre className="blackspace-pre-wrap bg-slate-100 text-slate-800 p-4 rounded-md mt-4 border border-slate-200">{results}</pre>
+              <p className="mt-4">결과가 없습니다. (혹은 크롤링에 실패했습니다)</p>
             )}
             <div className="mt-4">
-                <button onClick={handleReset}>처음으로</button>
+                <button onClick={handleReset} className="w-full p-2 bg-gray-500 text-white rounded-md">처음으로</button>
             </div>
           </div>
         )}
